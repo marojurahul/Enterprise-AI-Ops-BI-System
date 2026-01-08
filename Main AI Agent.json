@@ -1,0 +1,234 @@
+{
+  "name": "Main AI Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "=You are a helpful personal assistant, and your goal is to help rahul manage\nhis life, through managing applications like his calendar for example.\nYou're responsible for taking incoming messages, and determining what tools\nto call.\n\n##Tools\n\n1. create_calendar_event: Call this tool when you want to create a new\ncalendar event.\n2. update_calendar_event: Call this tool when you want to update an\nexisting calendar event. Please always search for the calendar event and\nfind it before going to update it. Need to specifically find the event\nID.\n3. find_calendar_event: Call this tool to search for the most relevant\ncalendar event based on the users messages.\n4. delete_calender_event : Call this tool to delete a calender. Please always search for the calendar event and\nfind it before going to deleting it. You need to specifically find the event\nID.\n\n##Instructions\n\nTake your time when deciding which tool to use - it's imperative that we\nselect the right one(s). Think clearly step-by-step through the process of\nselecting the tool and deciding what to do next.\n\n##Rules\n\n1. Today's date is {{ $now }}\n2. Whenever updating or deleting a calendar event, always make sure to search for the\nevent first. We must retrieve the event ID before updating or deleting the existing\ncalendar event."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        176,
+        0
+      ],
+      "id": "6e46afea-10c9-4d26-92c0-54ba7537bd1d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        48,
+        224
+      ],
+      "id": "c1b2fab8-e9d0-4aa3-90b1-6b282efbd29e",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Gnlr5vGhYJhcTEy8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.chat.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        224
+      ],
+      "id": "6000745e-bfdf-4475-8cb1-22b78db30834",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool when you're dealing with anything related to google calendar.",
+        "workflowId": {
+          "__rl": true,
+          "value": "x6GFpuo1OraukQ6q",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/x6GFpuo1OraukQ6q",
+          "cachedResultName": "Rahul Company — Calender Sub Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('message', ``, 'string') }}",
+            "sessionid": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('sessionid', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "message"
+          ],
+          "schema": [
+            {
+              "id": "sessionid",
+              "displayName": "sessionid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        224
+      ],
+      "id": "d01a856b-8170-482c-bcc3-b4f0c597daa6",
+      "name": "Call 'Calender Sub Agent'"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        0
+      ],
+      "id": "346115ad-1eac-4a6c-9b94-232d19bcf01b",
+      "name": "Telegram Trigger",
+      "webhookId": "69272acf-2762-4aef-b2e6-24f8e9de550b",
+      "credentials": {
+        "telegramApi": {
+          "id": "zuBMB2JAwipXZXQA",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        528,
+        0
+      ],
+      "id": "30739120-e230-4c70-b9cb-73ad4ac8796f",
+      "name": "Send a text message",
+      "webhookId": "d6b75f6d-be3f-4356-9ddd-6097aea303cd",
+      "credentials": {
+        "telegramApi": {
+          "id": "zuBMB2JAwipXZXQA",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Calender Sub Agent'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "4zEkKmASVLO8JJTn",
+    "executionTimeout": -1
+  },
+  "versionId": "db636e75-c9c3-40e9-ac7f-14267665bfff",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e1bd7939f0576a92ebad35815686ae264223bc4c01d4a52de03ef6f1fdd66fbd"
+  },
+  "id": "n5bCRBdhbXp0MEoy",
+  "tags": []
+}
